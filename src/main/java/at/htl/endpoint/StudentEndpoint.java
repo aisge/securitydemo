@@ -3,12 +3,15 @@ package at.htl.endpoint;
 import at.htl.model.Student;
 import at.htl.repository.StudentRepository;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.net.URI;
 import java.util.List;
 
@@ -23,17 +26,23 @@ public class StudentEndpoint {
     StudentRepository studentRepository;
 
     @GET
-    public List<Student> getAll() {
+    @RolesAllowed({"user", "admin"})
+    // @RolesAllowed("user")
+    public List<Student> getAll(@Context SecurityContext ctx) {
+
+        System.out.println(ctx.getUserPrincipal() + " : " + ctx.isUserInRole("admin"));
         return studentRepository.findAll().list();
     }
 
     @GET
     @Path("/{userid}")
+    @RolesAllowed({"user", "admin"})
     public Student getStudent(@PathParam("userid") String userid) {
         return studentRepository.findById(userid);
     }
 
     @POST
+    @RolesAllowed("admin")
     public Response create(Student s) {
         studentRepository.persist(s);
         // return Response.status(201).build();
@@ -41,6 +50,7 @@ public class StudentEndpoint {
     }
 
     @PUT
+    @RolesAllowed("admin")
     public Response update(Student s) {
         Student sOld = studentRepository.findById(s.userid);
         sOld.lastname = s.lastname;
@@ -51,6 +61,7 @@ public class StudentEndpoint {
 
     @DELETE
     @Path("/{userid}")
+    @RolesAllowed("admin")
     public Response delete(@PathParam("userid") String userid) {
         studentRepository.deleteById(userid);
         return Response.status(204).build();

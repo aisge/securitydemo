@@ -18,6 +18,9 @@ class StudentEndpointTest {
     @Test
     void getAll() {
         given()
+                .auth()
+                .preemptive()
+                .basic("susi", "passme")
                 .when().get("/students")
                 .then()
                 .statusCode(200)
