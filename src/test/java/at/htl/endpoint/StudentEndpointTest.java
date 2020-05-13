@@ -18,6 +18,9 @@ class StudentEndpointTest {
     @Test
     void getAll() {
         given()
+                .auth()
+                .preemptive() // Authentication sofort im Header mitgesendet, egal ob der Server bereits validiert hat
+                .basic("max", "passme")
                 .when().get("/students")
                 .then()
                 .statusCode(200)
@@ -27,6 +30,9 @@ class StudentEndpointTest {
     @Test
     void get() {
         given()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
@@ -42,6 +48,8 @@ class StudentEndpointTest {
                 .build();
 
         given().contentType(MediaType.APPLICATION_JSON)
+                .auth()
+                .basic("max", "passme")
                 .body(tt.toString())
                 .when()
                 .post("/students")
@@ -50,12 +58,18 @@ class StudentEndpointTest {
                 .header("Location", containsString("/students/if1001"));
 
         given()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .when().get("/students/if1001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Tester"));
 
         given().when()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .delete("students/if1001")
                 .then()
                 .statusCode(204);
