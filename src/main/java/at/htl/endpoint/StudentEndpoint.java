@@ -27,10 +27,7 @@ public class StudentEndpoint {
 
     @GET
     @RolesAllowed({"user", "admin"})
-    // @RolesAllowed("user")
     public List<Student> getAll(@Context SecurityContext ctx) {
-
-        System.out.println(ctx.getUserPrincipal() + " : " + ctx.isUserInRole("admin"));
         return studentRepository.findAll().list();
     }
 

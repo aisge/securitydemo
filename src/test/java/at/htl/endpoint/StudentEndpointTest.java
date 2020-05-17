@@ -30,6 +30,9 @@ class StudentEndpointTest {
     @Test
     void get() {
         given()
+                .auth()
+                .preemptive()
+                .basic("susi", "passme")
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
@@ -45,6 +48,19 @@ class StudentEndpointTest {
                 .build();
 
         given().contentType(MediaType.APPLICATION_JSON)
+                .auth()
+                .preemptive()
+                .basic("susi", "passme")
+                .body(tt.toString())
+                .when()
+                .post("/students")
+                .then()
+                .statusCode(403);
+
+        given().contentType(MediaType.APPLICATION_JSON)
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .body(tt.toString())
                 .when()
                 .post("/students")
@@ -53,12 +69,18 @@ class StudentEndpointTest {
                 .header("Location", containsString("/students/if1001"));
 
         given()
+                .auth()
+                .preemptive()
+                .basic("susi", "passme")
                 .when().get("/students/if1001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Tester"));
 
         given().when()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .delete("students/if1001")
                 .then()
                 .statusCode(204);
@@ -72,6 +94,9 @@ class StudentEndpointTest {
                 .add("lastname", "Muster2")
                 .build();
         given()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(mm.toString())
                 .when().put("/students")
@@ -79,6 +104,9 @@ class StudentEndpointTest {
                 .statusCode(204);
 
         given()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
@@ -90,6 +118,9 @@ class StudentEndpointTest {
                 .add("lastname", "Muster")
                 .build();
         given()
+                .auth()
+                .preemptive()
+                .basic("max", "passme")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(mm.toString())
                 .when().put("/students")
