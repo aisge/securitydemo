@@ -1,0 +1,18 @@
+GET http://localhost:8080/students
+Accept: application/json
+Authorization: Basic max passme
+
+###
+
+POST http://localhost:8080/students/
+Content-Type: application/json
+Authorization: Basic max passme
+
+{
+  "userid": "it1000",
+  "firstname": "Gerald",
+  "lastname": "Aistleitner"
+}
+
+###
+
