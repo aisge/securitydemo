@@ -9,8 +9,10 @@ create table quarkus_user (
   id int,
   username varchar(255),
   password varchar(255),
+  salt varchar(255),
+  iteration_count integer,
   role varchar(255)
 );
 
-insert into quarkus_user(id, username, password, role) values (1, 'max', 'passme', 'admin');
-insert into quarkus_user(id, username, password, role) values (2, 'susi', 'passme', 'user');
+insert into quarkus_user(id, username, password, salt, iteration_count, role) values (1, 'max', 'sjl8xkG1Mc/yQF1Nengx3Ogg57Y5F0c=', 'ZE9EKfds3D7VT/0bTNCIgg==', 10, 'admin');
+insert into quarkus_user(id, username, password, salt, iteration_count, role) values (2, 'susi', 'aPnJAMErXgXIR1RlsB1yegY2JmNeXps=','pc9CKhxWJmag8dbHzg7yKA==', 10, 'user');

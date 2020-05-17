@@ -1,6 +1,6 @@
 GET http://localhost:8080/students
 Accept: application/json
-Authorization: Basic max passme
+Authorization: Basic max myPassword
 
 ###
 
@@ -16,3 +16,6 @@ Authorization: Basic max passme
 
 ###
 
+GET http://localhost:8080/passwords/passme
+
+###
