@@ -1,0 +1,11 @@
+# Request Access-Token for user susi
+# curl -X POST http://192.168.99.101:8180/auth/realms/quarkus-realm/protocol/openid-connect/token --user quarkus-client:11d7d8a1-8647-4c36-a7c3-9c1f5a2986fd -H "content-type: application/x-www-for
+#m-urlencoded" -d "username=susi&password=passme&grant_type=password"
+POST http://192.168.99.101:8180/auth/realms/quarkus-realm/protocol/openid-connect/token
+Authorization: Basic quarkus-client 11d7d8a1-8647-4c36-a7c3-9c1f5a2986fd
+Content-Type: application/x-www-form-urlencoded
+
+username=susi&password=passme&grant_type=password
+
+###
+
