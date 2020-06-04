@@ -3,6 +3,7 @@ package at.htl.endpoint;
 import at.htl.model.Student;
 import at.htl.repository.StudentRepository;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -23,6 +24,7 @@ public class StudentEndpoint {
     StudentRepository studentRepository;
 
     @GET
+    @RolesAllowed("user")
     public List<Student> getAll() {
         return studentRepository.findAll().list();
     }
