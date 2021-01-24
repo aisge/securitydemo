@@ -1,0 +1,22 @@
+= Security mit Quarkus
+:author: Gerald Aistleitner <g.aistleitner@htl-leonding.ac.at>
+:date: 2020-09-19
+:icons: font
+:imagesdir: images
+:sourcedir: ../src
+:customcss: css/presentation.css
+:source-highlighter: highlightjs
+:highlightjs-theme: css/tomorrow.css
+:backgroundimg: https://github.com/aisge/presentationbgvids/raw/master
+// :backgroundimg: file:///z:/asciidocpresentation/videos
+// git clone -b 3.9.2 --depth 1 https://github.com/hakimel/reveal.js.git
+:revealjsdir: reveal.js
+
+
+include::p_intro.adoc[]
+
+include::p_propfiles.adoc[]
+
+include::p_dbconf.adoc[]
+
+include::p_jwt.adoc[]

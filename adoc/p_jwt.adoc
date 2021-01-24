@@ -1,0 +1,275 @@
+[.lightbg,background-opacity="0.2"]
+== Security mittels JWT
+
+Die Account-bezogenen Services sollen via RBAC mit JWT abgesichert werden.
+
+
+[.lightbg,background-opacity="0.2"]
+=== Was ist JWT
+
+* JWT = JSON Web Token
+* Nach https://tools.ietf.org/html/rfc7519[RFC 7519,window=_blank] genormtes Access Token
+* Enthält alle wichtigen Informationen über eine Entität, deshalb
+** ist nicht jeweils eine neue Datenbankabfrage notwendig
+** muss die Sitzung nicht am Server gespeichert werden (stateless möglich)
+
+[.lightbg,background-opacity="0.2"]
+=== Aufbau eines JWT
+
+* JWT besteht aus 3 Teilen:
+** HEADER
+** PAYLOAD
+** SIGNATURE
+
+* Jeweils Base64-kodiert und durch einen Punkt getrennt (HEADER.PAYLOAD.SIGNATURE)
+
+[.lightbg,background-opacity="0.2"]
+=== Aufbau eines JWT - Header
+
+Header besteht meist aus zwei Teilen:
+
+* `alg` +
+Verwendete Signiermethode (HS256, ES256)
+
+* `typ` +
+Ist eigentlich immer `JWT`
+
+```
+{ "alg": "HS256", "typ": "JWT" }
+```
+
+[.lightbg,background-opacity="0.2"]
+=== Aufbau von JWT - Payload
+
+Enthält die eigentlichen Informationen, die an die Anwendung übermittelt werden sollen.
+Informationen werden als Key/Value-Paare bereitgestellt.
+Die Schlüssel werden als *Claims* bezeichnet.
+
+Grundsätzliche werden 3 Arten von Claims unterschieden (siehe nä.
+Folie).
+Alle Claims sind optional!
+So wenige wie nötig integrieren zwecks Performance!
+
+[.lightbg,background-opacity="0.2"]
+=== Aufbau von JWT - Payload
+
+3 Arten von Claims:
+
+* *Registrierte Claims* +
+Sind im https://www.iana.org/assignments/jwt/jwt.xhtml[IANA JSON Web Token Claim Register,window=_blank] registriert.
+Deren Zweck ist im Standard festgelegt. +
+Beispiele: *`iss`*=Issuer, *`aud`*=Audience (Zieldomäne), *`exp`*=Expiration Time
+
+* *Öffentliche Claims:* +
+Sind nach Belieben definierbar, um Kollisionen in der Semantik zu vermeiden ist ebenfalls eine Registrierung im Register notwendig.
+
+* *Private Claims:* +
+Informationen, die speziell für die eigene Anwendung ausgetauscht werden sollen.
+Darauf achten, dass keine Namenskollisionen mit öffentlichen Claims entstehen!
+
+[.lightbg,background-opacity="0.2"]
+=== Aufbau von JWT - Signature
+
+Signatur wird unter Verwendung der Base64-Kodierung des Headers und der Payload mit der angegebenen Signatur-/Verschlüsselungsmethode erstellt.
+
+Dafür ist ein *geheimer Schlüssel* zu verwenden, der nur der Ursprungsanwendung bekannt ist.
+
+* Stellt sicher, dass die Nachricht unterwegs nicht verändert wurde!
+* Stellt sicher, dass der Absender der richtige ist (nur der hat privaten Schlüssel)
+
+
+Link: https://jwt.io/#debugger-io[JWT-Debugger]
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== SmallRye JWT hinzufügen
+
+Folgende Extension hinzufügen: +
+*SmallRye JWT* +
++ *`./mvnw quarkus:add-extension -Dextensions="io.quarkus:quarkus-smallrye-jwt"`*
+
+Konfiguration in `application.properties` ergänzen:
+
+[source,bash]
+----
+mp.jwt.verify.publickey.location=META-INF/resources/publicKey.pem
+mp.jwt.verify.issuer=http://htl.at/securitydemo
+
+smallrye.jwt.sign.key-location=privateKey.pem
+smallrye.jwt.new-token.lifespan=60
+smallrye.jwt.new-token.issuer=http://htl.at/securitydemo
+
+quarkus.smallrye-jwt.enabled=true
+----
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Schlüsselpaar generieren
+
+Wir benötigen ein Schlüsselpaar mit RSA256 als Hash-Algorithmus:
+
+Konfiguration in `application.properties` ergänzen:
+
+[source,bash]
+----
+openssl genrsa -out publicKey.pem
+
+openssl pkcs8 -topk8 -inform PEM -in publicKey.pem
+              -out privateKey.pem -nocrypt
+
+openssl rsa -in publicKey.pem -pubout -outform PEM
+              -out publicKey.pem
+----
+
+Alternative: https://csfieldguide.org.nz/en/interactives/rsa-key-generator/[Online-Generator]
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Neue Resource: AuthResource
+
+Login-Methode prüft UserId und Passwort und generiert ein neues Token, wenn die Credentials korrekt sind:
+
+[.source15]
+[source,java]
+----
+    public Response login(JsonObject object) {
+        String username = object.getString("username");
+        String password = object.getString("password");
+        if (username==null || !username.equals(password)) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+
+        long exp = Instant.now().getEpochSecond() + lifespan;
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(Claims.upn.name(), username);
+        claims.put(Claims.iss.name(), issuer);
+
+        String token = Jwt
+                .claims(claims).groups("customer").sign();
+        String entity = Json.createObjectBuilder()
+                .add("token", token).add("expires_at", exp)
+                .build().toString();
+        return Response.ok().entity(entity).build();
+    }
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Neue Resource: AuthResource
+
+Die Gültigkeitsdauer der Tokens und Issuer könnten von der application.properties injected werden:
+
+[.source18]
+[source,java]
+----
+    @Inject
+    @ConfigProperty(name="smallrye.jwt.new-token.lifespan")
+    long lifespan;
+
+    @Inject
+    @ConfigProperty(name="mp.jwt.verify.issuer")
+    String issuer;
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Absichern der Resourcen
+
+Auf Klassen- oder Methodenebene kann per Annotation festgelegt werden, welche Rolle(n) benötigt werden, um eine Methode auszuführen:
+
+[source,java]
+----
+@RolesAllowed("customer")
+----
+
+Zusätzlich können Claims direkt Injected werden, um diese dann für Checks heranzuziehen:
+
+[source,java]
+----
+    @Inject
+    JsonWebToken jwt;
+
+    @Inject
+    @Claim(standard = Claims.upn)
+    long upn=1;
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== JWT in Angular-Client / Interceptor
+
+Nachdem das Token vom erfolgreichen Login-Aufruf erhalten wurde wird es meist im LocalStorage abgelegt.
+Dieses Token muss dann bei allen Requests im Header mitgesendet werden, wofür sich ein `HttpInterceptor` anbietet:
+
+[.source18]
+[source,typescript]
+----
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+
+  intercept(req: HttpRequest<any>,
+            next: HttpHandler): Observable<HttpEvent<any>> {
+    const idToken = localStorage.getItem('id_token');
+
+    if (idToken) {
+      const cloned = req.clone({
+        headers: req.headers.set('Authorization', 'Bearer ' + idToken)
+      });
+
+      return next.handle(cloned);
+    }
+    else {
+      return next.handle(req);
+    }
+  }
+}
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== JWT in Angular-Client / Interceptor
+
+Zum Aktivieren wird der in der Datei `app.modules.ts` im Abschnitt `providers` angegeben.
+
+[source,typescript]
+----
+    {
+      provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor,
+      multi: true
+    }
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== JWT in Angular-Client / AuthGuard
+
+Zusätzlich kann ein AuthGuard implementiert werden.
+Darin könnten wir beispielsweise überprüfen, ob der Expires-Zeitstempel schon überschritten wurde.
+Wenn ja leiten wir auf die Login-Maske um.
+
+Konfig der Routing-Tabelle:
+
+[source,typescript]
+----
+ {
+    path: 'customer', component: CustomerComponent,
+    canActivate: [AuthGuardService]
+  }, ...
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== JWT in Angular-Client / AuthGuard
+
+AuthGuard-Implementierung:
+
+[source,typescript]
+----
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthGuardService implements CanActivate {
+
+  constructor(private authService: AuthService,
+              private router: Router) { }
+
+  canActivate(): boolean {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['login']);
+      return false;
+    }
+    return true;
+  }
+}
+----

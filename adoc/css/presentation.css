@@ -1,0 +1,76 @@
+body {
+    background-color: #d7d2b2;
+}
+
+.reveal {
+    font-family: "Open Sans", sans-serif;
+    font-size: 32px;
+    font-weight: normal;
+    color: #333;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-weight: normal;
+    line-height: 1.2;
+    letter-spacing: -0.08em;
+    text-transform: uppercase;
+    text-shadow: none;
+    word-wrap: normal;
+}
+
+.reveal h1 {
+    font-size: 3.0em;
+}
+
+.reveal h2 {
+    font-size: 2.0em;
+    text-transform: none !important;
+    font-weight: bold;
+}
+
+.reveal h3 {
+    font-size: 1.55em;
+}
+
+.reveal h4 {
+    font-size: 1em;
+}
+
+.reveal h1 {
+    text-shadow: none;
+}
+
+.reveal .lightbg {
+    background: #fff8f1d0;
+}
+
+.reveal .decentlightbg {
+    background: #fff8f130;
+}
+
+.small {
+    font-size: 28px;
+}
+
+.reveal code {
+    font-size: 22px;
+}
+
+.reveal .colist {
+    font-size: 26px;
+}
+
+.reveal .source18 code {
+    font-size: 18px;
+}
+
+.reveal .source15 code {
+    font-size: 15px;
+}
