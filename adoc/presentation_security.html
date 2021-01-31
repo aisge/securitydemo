@@ -447,8 +447,8 @@
                                     </ul>
                                 </div>
                             </li>
-                            <li><p>Jeweils Base64-kodiert und durch einen Punkt getrennt
-                                (HEADER.PAYLOAD.SIGNATURE)</p></li>
+                            <li><p>Jeweils Base64-kodiert und durch einen Punkt getrennt (HEADER.PAYLOAD.SIGNATURE)</p>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -476,10 +476,13 @@
                 Payload</h2>
                 <div class="slide-content">
                     <div class="paragraph"><p>Enthält die eigentlichen Informationen, die an die Anwendung übermittelt
-                        werden sollen. Informationen werden als Key/Value-Paare bereitgestellt.
+                        werden sollen.
+                        Informationen werden als Key/Value-Paare bereitgestellt.
                         Die Schlüssel werden als <strong>Claims</strong> bezeichnet.</p></div>
-                    <div class="paragraph"><p>Grundsätzliche werden 3 Arten von Claims unterschieden (siehe nä. Folie).
-                        Alle Claims sind optional! So wenige wie nötig integrieren zwecks Performance!</p></div>
+                    <div class="paragraph"><p>Grundsätzliche werden 3 Arten von Claims unterschieden (siehe nä.
+                        Folie).
+                        Alle Claims sind optional!
+                        So wenige wie nötig integrieren zwecks Performance!</p></div>
                 </div>
             </section>
             <section id="_aufbau_von_jwt_payload_2" class="lightbg" data-background-opacity="0.2"><h2>Aufbau von JWT -
@@ -490,16 +493,16 @@
                         <ul>
                             <li><p><strong>Registrierte Claims</strong><br>
                                 Sind im <a href="https://www.iana.org/assignments/jwt/jwt.xhtml" target="_blank">IANA
-                                    JSON Web Token Claim Register</a> registriert. Deren Zweck ist im Standard
-                                festgelegt.<br>
+                                    JSON Web Token Claim Register</a> registriert.
+                                Deren Zweck ist im Standard festgelegt.<br>
                                 Beispiele: <strong><code>iss</code></strong>=Issuer, <strong><code>aud</code></strong>=Audience
                                 (Zieldomäne), <strong><code>exp</code></strong>=Expiration Time</p></li>
                             <li><p><strong>Öffentliche Claims:</strong><br>
                                 Sind nach Belieben definierbar, um Kollisionen in der Semantik zu vermeiden ist
                                 ebenfalls eine Registrierung im Register notwendig.</p></li>
                             <li><p><strong>Private Claims:</strong><br>
-                                Informationen, die speziell für die eigene Anwendung ausgetauscht werden sollen. Darauf
-                                achten, dass keine Namenskollisionen mit öffentlichen Claims entstehen!</p></li>
+                                Informationen, die speziell für die eigene Anwendung ausgetauscht werden sollen.
+                                Darauf achten, dass keine Namenskollisionen mit öffentlichen Claims entstehen!</p></li>
                         </ul>
                     </div>
                 </div>
@@ -527,9 +530,8 @@
                 <div class="slide-content">
                     <div class="paragraph"><p>Folgende Extension hinzufügen:<br>
                         <strong>SmallRye JWT</strong><br>
-                        <br>
-                        <strong><code>./mvnw quarkus:add-extension -Dextensions="io.quarkus:quarkus-smallrye-jwt"</code></strong>
-                    </p></div>
+                        + <strong><code>./mvnw quarkus:add-extension
+                            -Dextensions="io.quarkus:quarkus-smallrye-jwt"</code></strong></p></div>
                     <div class="paragraph"><p>Konfiguration in <code>application.properties</code> ergänzen:</p></div>
                     <div class="listingblock">
                         <div class="content"><pre class="highlightjs highlight"><code data-lang="bash"
@@ -654,8 +656,9 @@ openssl rsa -in publicKey.pem -pubout -outform PEM
                 Interceptor</h2>
                 <div class="slide-content">
                     <div class="paragraph"><p>Nachdem das Token vom erfolgreichen Login-Aufruf erhalten wurde wird es
-                        meist im LocalStorage abgelegt. Dieses Token muss dann bei allen Requests im Header mitgesendet
-                        werden, wofür sich ein <code>HttpInterceptor</code> anbietet:</p></div>
+                        meist im LocalStorage abgelegt.
+                        Dieses Token muss dann bei allen Requests im Header mitgesendet werden, wofür sich ein <code>HttpInterceptor</code>
+                        anbietet:</p></div>
                     <div class="listingblock source18">
                         <div class="content"><pre class="highlightjs highlight"><code data-lang="typescript"
                                                                                       class="language-typescript hljs"
@@ -704,10 +707,10 @@ export class AuthInterceptor implements HttpInterceptor {
                      data-background-video="https://github.com/aisge/presentationbgvids/raw/master/typing.mp4"
                      data-background-video-loop data-background-opacity="0.3"><h2>JWT in Angular-Client / AuthGuard</h2>
                 <div class="slide-content">
-                    <div class="paragraph"><p>Zusätzlich kann ein AuthGuard implementiert werden. Darin könnten wir
-                        beispielsweise überprüfen, ob der
-                        Expires-Zeitstempel schon überschritten wurde. Wenn ja leiten wir auf die Login-Maske um.</p>
-                    </div>
+                    <div class="paragraph"><p>Zusätzlich kann ein AuthGuard implementiert werden.
+                        Darin könnten wir beispielsweise überprüfen, ob der Expires-Zeitstempel schon überschritten
+                        wurde.
+                        Wenn ja leiten wir auf die Login-Maske um.</p></div>
                     <div class="paragraph"><p>Konfig der Routing-Tabelle:</p></div>
                     <div class="listingblock">
                         <div class="content"><pre class="highlightjs highlight"><code data-lang="typescript"
@@ -746,6 +749,215 @@ export class AuthGuardService implements CanActivate {
 }</code></pre>
                         </div>
                     </div>
+                </div>
+            </section>
+        </section>
+        <section>
+            <section id="_keycloak" class="lightbg" data-background-opacity="0.2"><h2>Keycloak</h2>
+                <div class="slide-content">
+                    <div class="paragraph"><p>Einsatz von KeyCloak zur Benutzer- und Rechteverwaltung.</p></div>
+                </div>
+            </section>
+            <section id="_was_ist_keycloak" class="lightbg" data-background-opacity="0.2"><h2>Was ist Keycloak</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Open-Source-Software</p></li>
+                            <li><p>zertifizierte OpenID Connect - Implementierung von Red Hat</p></li>
+                            <li><p>SSO (Single Sign On)</p></li>
+                            <li><p>Eine Identität für mehrere Anwendungen (analog Google od. Facebook-Login)</p></li>
+                            <li><p>Kümmert sich um Authorisierung und Authentisierung</p>
+                                <div class="ulist">
+                                    <ul>
+                                        <li><p>Zugriff auf LDAP bzw. Active-Directory-Server möglich</p></li>
+                                        <li><p>Kerberos-Server (Windows Login)</p></li>
+                                        <li><p>Einsatz als Identity Broker möglich (Authentifizierung über externen
+                                            Identity Provider wie Google, etc.)</p></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="_keycloak_funktionsweise" class="lightbg" data-background-opacity="0.2"><h2>Keycloak
+                Funktionsweise</h2>
+                <div class="slide-content">
+                    <div class="imageblock" style=""><img src="images/keycloak_overview.png" alt="keycloak overview">
+                    </div>
+                </div>
+            </section>
+            <section id="_starten_von_keycloak_via_docker" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/configuration.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Starten von Keycloak via Docker</h2>
+                <div class="slide-content">
+                    <div class="paragraph"><p>Um sich die Installation von Keycloak zu ersparen kann das bereitgestellte
+                        Docker-Image verwendet werden:</p></div>
+                    <div class="listingblock">
+                        <div class="content"><pre class="highlightjs highlight"><code data-lang="bash"
+                                                                                      class="language-bash hljs"
+                                                                                      data-noescape="true">docker run -p 8080:8080
+           -e KEYCLOAK_USER=admin
+           -e KEYCLOAK_PASSWORD=admin
+           --name keycloak
+       jboss/keycloak</code></pre>
+                        </div>
+                    </div>
+                    <div class="paragraph"><p>Um gleich ein zuvor exportiertes Realm beim Start zu importieren könnte
+                        das Kommando wie folgt erweitert werden:</p></div>
+                    <div class="listingblock">
+                        <div class="content"><pre class="highlightjs highlight"><code data-lang="bash"
+                                                                                      class="language-bash hljs"
+                                                                                      data-noescape="true">docker run
+   -p 8080:8080
+   -e KEYCLOAK_USER=admin
+   -e KEYCLOAK_PASSWORD=admin
+   -e KEYCLOAK_IMPORT="/tmp/realm-export.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+   -v \abspath\to\realm-export.json:/tmp/realm-export.json
+   --name keycloak
+  jboss/keycloak</code></pre>
+                        </div>
+                    </div>
+                    <div class="paragraph"><p>Konfigurationsmöglichkeiten siehe Doku in <a
+                            href="https://hub.docker.com/r/jboss/keycloak">DockerHub</a>.</p></div>
+                </div>
+            </section>
+            <section id="_konfiguration_des_realms" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/configuration.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Konfiguration des Realms</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p><a href="http://localhost:8080" class="bare">http://localhost:8080</a> öffnen</p>
+                            </li>
+                            <li><p><code>Administration Console</code> wählen</p></li>
+                            <li><p>dort mit den beim Containerstart übergebenen Admin-Credentials anmelden</p></li>
+                            <li><p>nun <code>Add Realm</code> auswählen, um einen eigenen Realm anzulegen</p></li>
+                        </ul>
+                    </div>
+                    <div class="imageblock" style=""><img src="images/addrealm.png" alt="addrealm"></div>
+                </div>
+            </section>
+            <section id="_konfiguration_des_realms_2" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/configuration.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Konfiguration des Realms</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Namen für den Realm vergeben und <code>Create</code> klicken</p></li>
+                            <li><p>Nun können <code>User</code> und ggfs. Realm-weite <code>Roles</code> angelegt werden
+                                nach Bedarf</p></li>
+                        </ul>
+                    </div>
+                    <div class="imageblock" style=""><img src="images/userdetails.png" alt="userdetails" height="270">
+                    </div>
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Sobald der Benutzer angelegt wurde sollte das Login in der Account Console
+                                funktionieren
+                                (<a href="http://localhost:8080/auth/realms/demo-realm/account/" class="bare">http://localhost:8080/auth/realms/demo-realm/account/</a>)
+                            </p></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="_konfiguration_der_anwendung" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/configuration.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Konfiguration der Anwendung</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Um eine eigene Applikation mit Keycloak schützen zu können muss diese in Keycloak
+                                registriert werden.</p></li>
+                            <li><p>Wählen Sie <code>Clients</code> im Menu aus und anschließend <code>Create</code></p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="imageblock" style=""><img src="images/createclient.png" alt="createclient"></div>
+                    <div class="paragraph"><p>(Die verwendete URL <a href="https://www.keycloak.org/app" class="bare">https://www.keycloak.org/app</a>
+                        ist eine SPA-App die zum Testen verwendet werden kann&#8230;&#8203;)</p></div>
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Für eigene Apps besser bei <code>Access Type</code> den Eintrag
+                                <code>confidential</code> auswählen</p></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="_quarkus_projekt_anpassen" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/typing.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Quarkus-Projekt anpassen</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p>KeyCloak-Modul hinzufügen:</p></li>
+                        </ul>
+                    </div>
+                    <div class="listingblock">
+                        <div class="content">
+                            <pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs"
+                                                                     data-noescape="true">./mvnw quarkus:add-extension -Dextensions='io.quarkus:quarkus-keycloak-authorization'</code></pre>
+                        </div>
+                    </div>
+                    <div class="ulist">
+                        <ul>
+                            <li><p>application.properties anpassen:</p></li>
+                        </ul>
+                    </div>
+                    <div class="listingblock">
+                        <div class="content"><pre class="highlightjs highlight"><code data-lang="bash"
+                                                                                      class="language-bash hljs"
+                                                                                      data-noescape="true">keycloak.url=http://localhost:8180
+quarkus.oidc.enabled=true
+quarkus.oidc.auth-server-url=${keycloak.url}/auth/realms/demo-realm
+quarkus.oidc.client-id=demo-app
+quarkus.oidc.credentials.secret=###credential einsetzen falls konfiguriert###
+quarkus.keycloak.policy-enforcer.enable=true
+quarkus.http.cors=true</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="_quarkus_projekt_anpassen_2" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/typing.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Quarkus-Projekt anpassen</h2>
+                <div class="slide-content">
+                    <div class="ulist">
+                        <ul>
+                            <li><p>Ersten Test mit CURL oder HTTP-Client-File durchführen:</p></li>
+                        </ul>
+                    </div>
+                    <div class="listingblock">
+                        <div class="content"><pre>curl -X POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token \
+--user demo-app:###credential einsetzen### \
+-H "content-type: application/x-www-form-urlencoded" \
+-d "username=susi&amp;password=passme&amp;grant_type=password"</pre>
+                        </div>
+                    </div>
+                    <div class="listingblock">
+                        <div class="content"><pre class="highlightjs highlight"><code data-lang="bash"
+                                                                                      class="language-bash hljs"
+                                                                                      data-noescape="true">POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token
+Authorization: Basic demo-app ###credential###
+Content-Type: application/x-www-form-urlencoded
+
+username=max&amp;password=passme&amp;grant_type=password
+
+###</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="_angular_projekt_integrieren" class="lightbg"
+                     data-background-video="https://github.com/aisge/presentationbgvids/raw/master/typing.mp4"
+                     data-background-video-loop data-background-opacity="0.3"><h2>Angular-Projekt integrieren</h2>
+                <div class="slide-content">
+                    <div class="paragraph"><p>Angular kann mittels dem Package <code>angular-oauth2-oidc</code> relativ
+                        einfach integriert werden.</p></div>
+                    <div class="paragraph"><p>Anleitung unter folgendem Link:<br>
+                        <a href="https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla"
+                           class="bare">https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla</a>
+                    </p></div>
                 </div>
             </section>
         </section>

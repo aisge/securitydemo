@@ -20,3 +20,5 @@ include::p_propfiles.adoc[]
 include::p_dbconf.adoc[]
 
 include::p_jwt.adoc[]
+
+include::p_keycloak.adoc[]
