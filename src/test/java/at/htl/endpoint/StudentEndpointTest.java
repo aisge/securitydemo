@@ -1,11 +1,10 @@
 package at.htl.endpoint;
 
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.core.MediaType;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
