@@ -1,14 +1,15 @@
 [.lightbg,background-opacity="0.2"]
 == Keycloak
 
-Einsatz von KeyCloak zur Benutzer- und Rechteverwaltung.
+Einsatz von Keycloak zur Benutzer- und Rechteverwaltung (OpenID Connect). +
+Branch: `keycloak`
 
 
 [.lightbg,background-opacity="0.2"]
 === Was ist Keycloak
 
 * Open-Source-Software
-* zertifizierte OpenID Connect - Implementierung von Red Hat
+* zertifizierte OpenID-Connect-Implementierung (CNCF-Projekt, ursprünglich Red Hat)
 * SSO (Single Sign On)
 * Eine Identität für mehrere Anwendungen (analog Google od.
 Facebook-Login)
@@ -24,120 +25,186 @@ Active-Directory-Server möglich
 image::keycloak_overview.png[]
 
 [.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
-=== Starten von Keycloak via Docker
+=== Variante A: Dev Services
 
-Um sich die Installation von Keycloak zu ersparen kann das bereitgestellte Docker-Image verwendet werden:
-
-[source,bash]
-----
-docker run -p 8080:8080
-           -e KEYCLOAK_USER=admin
-           -e KEYCLOAK_PASSWORD=admin
-           --name keycloak
-       jboss/keycloak
-----
-
-Um gleich ein zuvor exportiertes Realm beim Start zu importieren könnte das Kommando wie folgt erweitert werden:
+Mit Extension `quarkus-oidc` und *ohne* `quarkus.oidc.auth-server-url` startet Quarkus im Dev- und Testmodus automatisch einen Keycloak-Container (Docker/Podman nötig).
 
 [source,bash]
 ----
-docker run
-   -p 8080:8080
-   -e KEYCLOAK_USER=admin
-   -e KEYCLOAK_PASSWORD=admin
-   -e KEYCLOAK_IMPORT="/tmp/realm-export.json -Dkeycloak.profile.feature.upload_scripts=enabled"
-   -v \abspath\to\realm-export.json:/tmp/realm-export.json
-   --name keycloak
-  jboss/keycloak
+./mvnw quarkus:add-extension \
+    -Dextensions="quarkus-oidc"
 ----
 
-Konfigurationsmöglichkeiten siehe Doku in https://hub.docker.com/r/jboss/keycloak[DockerHub, target=_blank].
+[.source18]
+[source,bash]
+----
+quarkus.oidc.client-id=quarkus-client
+quarkus.oidc.credentials.secret=secret
+# Realm (User, Rollen, Clients) aus src/main/resources importieren
+quarkus.keycloak.devservices.realm-path=quarkus-realm.json
+# fixer Port, damit der Angular-Client den Issuer kennt
+%dev.quarkus.keycloak.devservices.port=8180
+# eigener Keycloak für prod
+%prod.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus-realm
+----
+
+Realm im Demo-Projekt: `quarkus-realm`, User `max`/`susi` (Passwort `passme`), Clients `quarkus-client` und `angular-client`
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Variante B: Keycloak via Docker
+
+Eigener Keycloak-Container (Image `jboss/keycloak` wird nicht mehr gepflegt):
+
+[source,bash]
+----
+docker run -d --name keycloak -p 8180:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=passme \
+  quay.io/keycloak/keycloak:26.8 start-dev
+----
+
+Realm beim Start importieren -- Dateiname im Container muss `<realm>-realm.json` lauten:
+
+[source,bash]
+----
+docker run -d --name keycloak -p 8180:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=passme \
+  -v "$PWD/src/main/resources/quarkus-realm.json:\
+/opt/keycloak/data/import/quarkus-realm-realm.json:ro,Z" \
+  quay.io/keycloak/keycloak:26.8 start-dev --import-realm
+----
+
+Konfigurationsmöglichkeiten: https://www.keycloak.org/server/containers[Keycloak Container-Doku, window=_blank]
 
 [.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
 === Konfiguration des Realms
 
-* http://localhost:8080 öffnen
-* `Administration Console` wählen
-* dort mit den beim Containerstart übergebenen Admin-Credentials anmelden
+* http://localhost:8180 öffnen und mit den Admin-Credentials anmelden
+* Dropdown links oben -> `Create realm` -> Name `quarkus-realm`
+* `Realm roles` -> `Create role`: `admin`, `user`
+* `Users` -> `Add user`, danach
+** Tab `Credentials` -> `Set password` (Temporary: Off)
+** Tab `Role mapping` -> `Assign role`
+* Test-Login in der Account Console: +
+http://localhost:8180/realms/quarkus-realm/account
 
-* nun `Add Realm` auswählen, um einen eigenen Realm anzulegen
-
-image::addrealm.png[]
-
-[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
-=== Konfiguration des Realms
-
-* Namen für den Realm vergeben und `Create` klicken
-* Nun können `User` und ggfs.
-Realm-weite `Roles` angelegt werden nach Bedarf
-
-image::userdetails.png[height="270"]
-
-* Sobald der Benutzer angelegt wurde sollte das Login in der Account Console funktionieren (http://localhost:8080/auth/realms/demo-realm/account/)
+NOTE: Seit Keycloak 17 gibt es kein `/auth` mehr in den URLs.
 
 [.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
-=== Konfiguration der Anwendung
+=== Client anlegen: Backend
 
-* Um eine eigene Applikation mit Keycloak schützen zu können muss diese in Keycloak registriert werden.
-* Wählen Sie `Clients` im Menu aus und anschließend `Create`
+Jede Anwendung muss in Keycloak als *Client* registriert werden: `Clients` -> `Create client`
 
-image::createclient.png[]
+* *Backend* `quarkus-client`
+** Client authentication: *On* (früher "Access Type: confidential")
+** Standard flow: On, Direct access grants: On (für Tests)
+** Valid redirect URIs `http://localhost:8080/*`, Web origins `http://localhost:8080`
+** Secret: Tab `Credentials`
 
-(Die verwendete URL https://www.keycloak.org/app ist eine SPA-App die zum Testen verwendet werden kann...)
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Client anlegen: Frontend
 
-* Für eigene Apps besser bei `Access Type` den Eintrag `confidential` auswählen
+Für Single-Page-Apps (Angular) einen eigenen Client anlegen:
+
+* *Frontend* `angular-client`
+** Client authentication: *Off* (public -- ein Browser kann kein Secret geheim halten)
+** Valid redirect URIs `http://localhost:4200/*`, Web origins `http://localhost:4200`
+** Tab `Advanced` -> PKCE Code Challenge Method: `S256`
 
 [.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
 === Quarkus-Projekt anpassen
 
-* KeyCloak-Modul hinzufügen:
+* Für `@RolesAllowed` reicht `quarkus-oidc` -- Realm-Rollen (`realm_access/roles`) werden automatisch übernommen
+* `quarkus-keycloak-authorization` (Policy Enforcer) nur für feingranulare Keycloak-Policies nötig
 
+[.source18]
 [source,bash]
 ----
-./mvnw quarkus:add-extension -Dextensions='io.quarkus:quarkus-keycloak-authorization'
-----
+quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus-realm
+quarkus.oidc.client-id=quarkus-client
+quarkus.oidc.credentials.secret=###credential einsetzen###
 
-* application.properties anpassen:
-
-[source,bash]
-----
-keycloak.url=http://localhost:8180
-quarkus.oidc.enabled=true
-quarkus.oidc.auth-server-url=${keycloak.url}/auth/realms/demo-realm
-quarkus.oidc.client-id=demo-app
-quarkus.oidc.credentials.secret=###credential einsetzen falls konfiguriert###
-quarkus.keycloak.policy-enforcer.enable=true
-quarkus.http.cors=true
+# CORS für Angular-Client
+quarkus.http.cors.enabled=true
+quarkus.http.cors.origins=http://localhost:4200
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
+quarkus.http.cors.headers=Authorization,Content-Type
 ----
 
 [.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
-=== Quarkus-Projekt anpassen
+=== Testen mit CURL / HTTP-Client
 
-* Ersten Test mit CURL oder HTTP-Client-File durchführen:
-
+[.source18]
 [source,bash]
 ----
-curl -X POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token \
---user demo-app:###credential einsetzen### \
--H "content-type: application/x-www-form-urlencoded" \
--d "username=susi&password=passme&grant_type=password"
+curl -X POST \
+  http://localhost:8180/realms/quarkus-realm/protocol/openid-connect/token \
+  --user "quarkus-client:secret" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=susi&password=passme&grant_type=password"
 ----
 
+[.source18]
 [source,bash]
 ----
-POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token
-Authorization: Basic demo-app ###credential###
+POST http://localhost:8180/realms/quarkus-realm/protocol/openid-connect/token
+Authorization: Basic quarkus-client secret
 Content-Type: application/x-www-form-urlencoded
 
-username=max&password=passme&grant_type=password
+username=susi&password=passme&grant_type=password
 
-###
+> {% client.global.set("token", response.body.access_token); %}
 ----
+
+NOTE: Password-Grant ist in OAuth 2.1 nicht mehr vorgesehen -- nur für Tests!
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Unit-Tests
+
+Dependency `quarkus-test-keycloak-server` (scope test) -- holt Tokens vom Dev-Services-Keycloak:
+
+[.source15]
+[source,java]
+----
+@QuarkusTest
+class StudentEndpointTest {
+    static final KeycloakTestClient keycloakClient = new KeycloakTestClient();
+
+    @Test
+    void getAll() {
+        // getAccessToken(username, passwort, clientId)
+        given().auth().oauth2(
+                keycloakClient.getAccessToken("susi", "passme", "quarkus-client"))
+            .when().get("/students")
+            .then().statusCode(200);
+    }
+}
+----
+
+Nur Rollenlogik testen, ganz ohne Keycloak: `@TestSecurity(user = "susi", roles = "user")`
 
 [.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
 === Angular-Projekt integrieren
 
-Angular kann mittels dem Package `angular-oauth2-oidc` relativ einfach integriert werden.
+Package `angular-oauth2-oidc`, *Authorization Code Flow mit PKCE* (Implicit Flow ist veraltet):
 
-Anleitung unter folgendem Link: +
-https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla
+[.source18]
+[source,typescript]
+----
+export const authCodeFlowConfig: AuthConfig = {
+  issuer: 'http://localhost:8180/realms/quarkus-realm',
+  redirectUri: window.location.origin,
+  clientId: 'angular-client',
+  responseType: 'code',
+  scope: 'openid profile email',
+  requireHttps: false           // nur lokal!
+};
+
+// app.config.ts - Interceptor hängt Access Token automatisch an
+provideHttpClient(withInterceptorsFromDi()),
+provideOAuthClient({ resourceServer: {
+  allowedUrls: ['http://localhost:8080'], sendAccessToken: true } })
+----
+
+Login: `oauthService.initCodeFlow()`, Logout: `oauthService.logOut()`

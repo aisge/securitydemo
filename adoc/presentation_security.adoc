@@ -1,6 +1,6 @@
 = Security mit Quarkus
 :author: Gerald Aistleitner <g.aistleitner@htl-leonding.ac.at>
-:date: 2020-09-19
+:date: 2026-11-23
 :icons: font
 :imagesdir: images
 :sourcedir: ../src
@@ -9,8 +9,8 @@
 :highlightjs-theme: css/tomorrow.css
 :backgroundimg: https://github.com/aisge/presentationbgvids/raw/master
 // :backgroundimg: file:///z:/asciidocpresentation/videos
-// git clone -b 3.9.2 --depth 1 https://github.com/hakimel/reveal.js.git
-:revealjsdir: reveal.js
+// lokal statt CDN: git clone -b 4.1.2 --depth 1 https://github.com/hakimel/reveal.js.git
+:revealjsdir: https://cdn.jsdelivr.net/npm/reveal.js@4.1.2
 
 
 include::p_intro.adoc[]
