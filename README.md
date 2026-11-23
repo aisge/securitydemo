@@ -65,5 +65,7 @@ docker run -d --name keycloak -p 8180:8080 \
 
 Admin-Konsole: http://localhost:8180 (admin / passme).
 Beim Import muss die Datei im Container `<realm>-realm.json` heißen, daher der Mount-Name.
+Angular-Client: Ordner `frontend` (Angular 22, Code Flow mit PKCE), siehe `frontend/README.md`.
+
 Damit Quarkus diesen Keycloak statt Dev Services verwendet:
 `quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus-realm` setzen.

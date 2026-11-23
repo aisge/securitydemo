@@ -1,0 +1,9 @@
+@if (auth.isLoggedIn()) {
+  <h1>Welcome {{ auth.givenName() }}</h1>
+  <p>Angemeldet als <b>{{ auth.userName() }}</b> mit den Rollen <b>{{ auth.roles().join(', ') }}</b>.</p>
+  <p><a routerLink="/students">Zu den Students</a></p>
+} @else {
+  <h1>Security Demo</h1>
+  <p>Bitte über Keycloak anmelden (User <code>max</code> oder <code>susi</code>, Passwort <code>passme</code>).</p>
+  <button type="button" (click)="auth.login()">Login</button>
+}

@@ -1,0 +1,20 @@
+<header>
+  <nav>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+    @if (auth.isLoggedIn()) {
+      <a routerLink="/students" routerLinkActive="active">Students</a>
+    }
+  </nav>
+  <div class="user">
+    @if (auth.isLoggedIn()) {
+      <span>{{ auth.userName() }} ({{ auth.roles().join(', ') }})</span>
+      <button type="button" (click)="auth.logout()">Logout</button>
+    } @else {
+      <button type="button" (click)="auth.login()">Login</button>
+    }
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>

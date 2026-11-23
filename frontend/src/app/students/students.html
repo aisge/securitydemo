@@ -1,0 +1,32 @@
+<h1>Students</h1>
+
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
+
+<table>
+  <thead>
+    <tr><th>User-ID</th><th>Vorname</th><th>Nachname</th><th></th></tr>
+  </thead>
+  <tbody>
+    @for (s of students(); track s.userid) {
+      <tr>
+        <td>{{ s.userid }}</td>
+        <td>{{ s.firstname }}</td>
+        <td>{{ s.lastname }}</td>
+        <td><button type="button" (click)="delete(s.userid)">Löschen</button></td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+<h2>Neuer Student</h2>
+@if (!auth.hasRole('admin')) {
+  <p>Hinweis: Anlegen und Löschen erlaubt das Backend nur der Rolle <code>admin</code> - zum Testen trotzdem möglich (→ 403).</p>
+}
+<form (submit)="$event.preventDefault(); create(userid.value, firstname.value, lastname.value)">
+  <input #userid placeholder="User-ID" required />
+  <input #firstname placeholder="Vorname" required />
+  <input #lastname placeholder="Nachname" required />
+  <button type="submit">Anlegen</button>
+</form>

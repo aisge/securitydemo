@@ -1,0 +1,16 @@
+table {
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 0.3rem 0.8rem;
+  text-align: left;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+}

@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+button {
+  cursor: pointer;
+  padding: 0.3rem 0.8rem;
+}
+
+.error {
+  color: #b00020;
+}
