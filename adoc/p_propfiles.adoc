@@ -1,3 +1,77 @@
 [.lightbg,background-opacity="0.2"]
-== Elytron - Properties File (ToDo)
+== Elytron - Properties File
 
+Einfachste Variante: User, Passwörter und Rollen in Properties-Files. +
+Branch: `elytron.properties`
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Extension und Konfiguration
+
+[source,bash]
+----
+./mvnw quarkus:add-extension \
+    -Dextensions="quarkus-elytron-security-properties-file"
+----
+
+`application.properties`:
+
+[source,bash]
+----
+# Basic Auth muss explizit aktiviert werden (sonst immer 401)
+quarkus.http.auth.basic=true
+quarkus.security.users.file.enabled=true
+quarkus.security.users.file.users=test-users.properties
+quarkus.security.users.file.roles=test-roles.properties
+quarkus.security.users.file.realm-name=MyRealm
+quarkus.security.users.file.plain-text=false
+----
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== User und Rollen
+
+`test-users.properties` -- Klartext (`plain-text=true`) oder MD5-Hash:
+
+[source,bash]
+----
+# HEX( MD5( user ":" realm ":" passwort ) )
+# echo -n "max:MyRealm:passme" | md5sum
+max=00ad7bab4019042e5e96db859e25f14c
+susi=32c811ad4a2990f38c5004cb4dbc7bd2
+----
+
+`test-roles.properties`:
+
+[source,bash]
+----
+max=admin,user
+susi=user
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Testen
+
+HTTP-Client in IntelliJ (`http-requests/students.http`):
+
+[source,bash]
+----
+GET http://localhost:8080/students
+Authorization: Basic susi passme
+----
+
+RestAssured -- `preemptive()` schickt die Credentials sofort mit:
+
+[source,java]
+----
+given().auth().preemptive().basic("max", "passme")
+    .when().get("/students")
+    .then().statusCode(200);
+----
+
+Ohne echte Anmeldung (Dependency `quarkus-test-security`):
+
+[source,java]
+----
+@Test
+@TestSecurity(user = "testuser", roles = "user")
+void getAll() { ... }
+----

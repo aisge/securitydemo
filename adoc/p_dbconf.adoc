@@ -1,3 +1,86 @@
 [.lightbg,background-opacity="0.2"]
-== Elytron JDBC (ToDo)
+== Elytron JDBC
 
+User, Passwörter und Rollen in der Datenbank. +
+Branch: `elytron.jdbc`
+
+[source,bash]
+----
+./mvnw quarkus:add-extension \
+    -Dextensions="quarkus-elytron-security-jdbc"
+----
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== User-Tabelle
+
+`import.sql` -- Tabelle ist keine Entity, wird also hier angelegt:
+
+[.source18]
+[source,sql]
+----
+drop table if exists quarkus_user;
+create table quarkus_user (id int, username varchar(255),
+    password varchar(255), role varchar(255));
+
+insert into quarkus_user values (1, 'max',  'passme', 'admin');
+insert into quarkus_user values (1, 'max',  'passme', 'user');
+insert into quarkus_user values (2, 'susi', 'passme', 'user');
+----
+
+WARNING: Mehrere Rollen: *eine Zeile pro Rolle*. `'admin,user'` wäre eine einzige Rolle namens "admin,user" (-> 403).
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Konfiguration (Klartext)
+
+[.source18]
+[source,bash]
+----
+quarkus.http.auth.basic=true
+quarkus.security.jdbc.enabled=true
+quarkus.security.jdbc.principal-query.sql=\
+    SELECT u.password, u.role FROM quarkus_user u WHERE u.username=?
+quarkus.security.jdbc.principal-query.clear-password-mapper.enabled=true
+quarkus.security.jdbc.principal-query.clear-password-mapper.password-index=1
+quarkus.security.jdbc.principal-query.attribute-mappings.0.index=2
+quarkus.security.jdbc.principal-query.attribute-mappings.0.to=groups
+----
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Passwörter mit bcrypt
+
+Tabelle um `salt varchar(255)` und `iteration_count int` erweitern, dann:
+
+[.source15]
+[source,bash]
+----
+quarkus.security.jdbc.principal-query.sql=SELECT u.password, u.salt, \
+    u.iteration_count, u.role FROM quarkus_user u WHERE u.username=?
+quarkus.security.jdbc.principal-query.bcrypt-password-mapper.enabled=true
+quarkus.security.jdbc.principal-query.bcrypt-password-mapper.password-index=1
+quarkus.security.jdbc.principal-query.bcrypt-password-mapper.salt-index=2
+quarkus.security.jdbc.principal-query.bcrypt-password-mapper.iteration-count-index=3
+quarkus.security.jdbc.principal-query.attribute-mappings.0.index=4
+quarkus.security.jdbc.principal-query.attribute-mappings.0.to=groups
+----
+
+Hash und Salt (Base64) erzeugt im Demo-Projekt der `PasswordGeneratorEndpoint`:
+`GET /passwords/passme` -- nur zum Üben, Passwörter gehören nie in eine URL!
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Alternative: Security JPA
+
+Heute übliche Variante: User als Entity, Passwort als bcrypt-Hash.
+
+[.source18]
+[source,java]
+----
+@Entity
+@UserDefinition
+public class AppUser extends PanacheEntity {
+    @Username public String username;
+    @Password public String password;   // BcryptUtil.bcryptHash(pw)
+    @Roles    public String role;       // hier: "admin,user" erlaubt
+}
+----
+
+Extension: `quarkus-security-jpa`
