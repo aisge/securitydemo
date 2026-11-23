@@ -7,19 +7,47 @@ Absichern der Services ist über mehrere Wege möglich.
 
 Folgende Varianten werden hier behandelt:
 
-* Benutzerkonfiguration in Properties-Files
-* Benutzerkonfiguration in der DB
-* JWT
-* OAuth2 / KeyCloak
+* Benutzerkonfiguration in Properties-Files (Elytron)
+* Benutzerkonfiguration in der DB (Elytron JDBC)
+* JWT (SmallRye JWT)
+* OpenID Connect / Keycloak
+
+Basis: Java 21, Quarkus 3.40, Keycloak 26.8, Angular 19+
 
 
 [.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
 === Ausgangsprojekt aufbauen
 
-* Git-Projekt klonen und alle Branches downloaden:
-`https://github.com/aisge/securitydemo.git`
-* Datenbank starten
-* Security Policy definieren mittels Annotationen:
-** GET-Methoden: `@RolesAllowed("user")`
-** UPDATE-Methoden: `@RolesAllowed("admin")`
+* Git-Projekt klonen und alle Branches anzeigen:
++
+[source,bash]
+----
+git clone https://github.com/aisge/securitydemo.git
+git branch --all
+----
+* Branches: `master` (ohne Security), `elytron.properties`, `elytron.jdbc`, `jwt`, `keycloak`
+* Datenbank: H2 In-Memory -- kein DB-Start nötig, Daten kommen aus `import.sql`
+* Starten mit `./mvnw quarkus:dev`, Tests mit `./mvnw test`
 
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Security Policy mittels Annotationen
+
+* GET-Methoden: `@RolesAllowed("user")`
+* ändernde Methoden (POST/PUT/DELETE): `@RolesAllowed("admin")`
+* öffentlich: `@PermitAll`
+
+[source,java]
+----
+import jakarta.annotation.security.RolesAllowed;
+
+@GET
+@RolesAllowed("user")
+public List<Student> getAll() { ... }
+
+@POST
+@RolesAllowed("admin")
+public Response create(Student s) { ... }
+----
+
+* Ohne Anmeldung -> *401 Unauthorized*, falsche Rolle -> *403 Forbidden*
+* Seit Quarkus 3: `+jakarta.*+` statt `+javax.*+`
