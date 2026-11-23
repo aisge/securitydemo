@@ -1,0 +1,25 @@
+### Ohne Login -> 401
+GET http://localhost:8080/students
+Accept: application/json
+
+### Als User (susi) -> 200
+GET http://localhost:8080/students
+Accept: application/json
+Authorization: Basic susi passme
+
+### Als User (susi) anlegen -> 403
+POST http://localhost:8080/students
+Content-Type: application/json
+Authorization: Basic susi passme
+
+{ "userid": "it1000", "firstname": "Gerald", "lastname": "Aistleitner" }
+
+### Als Admin (max) anlegen -> 201
+POST http://localhost:8080/students
+Content-Type: application/json
+Authorization: Basic max passme
+
+{ "userid": "it1000", "firstname": "Gerald", "lastname": "Aistleitner" }
+
+### bcrypt-Hash + Salt für ein Passwort erzeugen (nur zum Üben!)
+GET http://localhost:8080/passwords/passme

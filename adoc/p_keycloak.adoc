@@ -1,0 +1,143 @@
+[.lightbg,background-opacity="0.2"]
+== Keycloak
+
+Einsatz von KeyCloak zur Benutzer- und Rechteverwaltung.
+
+
+[.lightbg,background-opacity="0.2"]
+=== Was ist Keycloak
+
+* Open-Source-Software
+* zertifizierte OpenID Connect - Implementierung von Red Hat
+* SSO (Single Sign On)
+* Eine Identität für mehrere Anwendungen (analog Google od.
+Facebook-Login)
+* Kümmert sich um Authorisierung und Authentisierung
+** Zugriff auf LDAP bzw.
+Active-Directory-Server möglich
+** Kerberos-Server (Windows Login)
+** Einsatz als Identity Broker möglich (Authentifizierung über externen Identity Provider wie Google, etc.)
+
+[.lightbg,background-opacity="0.2"]
+=== Keycloak Funktionsweise
+
+image::keycloak_overview.png[]
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Starten von Keycloak via Docker
+
+Um sich die Installation von Keycloak zu ersparen kann das bereitgestellte Docker-Image verwendet werden:
+
+[source,bash]
+----
+docker run -p 8080:8080
+           -e KEYCLOAK_USER=admin
+           -e KEYCLOAK_PASSWORD=admin
+           --name keycloak
+       jboss/keycloak
+----
+
+Um gleich ein zuvor exportiertes Realm beim Start zu importieren könnte das Kommando wie folgt erweitert werden:
+
+[source,bash]
+----
+docker run
+   -p 8080:8080
+   -e KEYCLOAK_USER=admin
+   -e KEYCLOAK_PASSWORD=admin
+   -e KEYCLOAK_IMPORT="/tmp/realm-export.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+   -v \abspath\to\realm-export.json:/tmp/realm-export.json
+   --name keycloak
+  jboss/keycloak
+----
+
+Konfigurationsmöglichkeiten siehe Doku in https://hub.docker.com/r/jboss/keycloak[DockerHub, target=_blank].
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Konfiguration des Realms
+
+* http://localhost:8080 öffnen
+* `Administration Console` wählen
+* dort mit den beim Containerstart übergebenen Admin-Credentials anmelden
+
+* nun `Add Realm` auswählen, um einen eigenen Realm anzulegen
+
+image::addrealm.png[]
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Konfiguration des Realms
+
+* Namen für den Realm vergeben und `Create` klicken
+* Nun können `User` und ggfs.
+Realm-weite `Roles` angelegt werden nach Bedarf
+
+image::userdetails.png[height="270"]
+
+* Sobald der Benutzer angelegt wurde sollte das Login in der Account Console funktionieren (http://localhost:8080/auth/realms/demo-realm/account/)
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Konfiguration der Anwendung
+
+* Um eine eigene Applikation mit Keycloak schützen zu können muss diese in Keycloak registriert werden.
+* Wählen Sie `Clients` im Menu aus und anschließend `Create`
+
+image::createclient.png[]
+
+(Die verwendete URL https://www.keycloak.org/app ist eine SPA-App die zum Testen verwendet werden kann...)
+
+* Für eigene Apps besser bei `Access Type` den Eintrag `confidential` auswählen
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Quarkus-Projekt anpassen
+
+* KeyCloak-Modul hinzufügen:
+
+[source,bash]
+----
+./mvnw quarkus:add-extension -Dextensions='io.quarkus:quarkus-keycloak-authorization'
+----
+
+* application.properties anpassen:
+
+[source,bash]
+----
+keycloak.url=http://localhost:8180
+quarkus.oidc.enabled=true
+quarkus.oidc.auth-server-url=${keycloak.url}/auth/realms/demo-realm
+quarkus.oidc.client-id=demo-app
+quarkus.oidc.credentials.secret=###credential einsetzen falls konfiguriert###
+quarkus.keycloak.policy-enforcer.enable=true
+quarkus.http.cors=true
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Quarkus-Projekt anpassen
+
+* Ersten Test mit CURL oder HTTP-Client-File durchführen:
+
+[source,bash]
+----
+curl -X POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token \
+--user demo-app:###credential einsetzen### \
+-H "content-type: application/x-www-form-urlencoded" \
+-d "username=susi&password=passme&grant_type=password"
+----
+
+[source,bash]
+----
+POST http://localhost:8180/auth/realms/demo-realm/protocol/openid-connect/token
+Authorization: Basic demo-app ###credential###
+Content-Type: application/x-www-form-urlencoded
+
+username=max&password=passme&grant_type=password
+
+###
+----
+
+[.lightbg,background-video="{backgroundimg}/typing.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Angular-Projekt integrieren
+
+Angular kann mittels dem Package `angular-oauth2-oidc` relativ einfach integriert werden.
+
+Anleitung unter folgendem Link: +
+https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla
