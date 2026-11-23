@@ -1,11 +1,10 @@
 package at.htl.endpoint;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.specification.RequestSpecification;
+import jakarta.ws.rs.core.MediaType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.core.MediaType;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -14,10 +13,80 @@ import static org.hamcrest.CoreMatchers.is;
 @QuarkusTest
 class StudentEndpointTest {
 
+    static String userToken;
+    static String adminToken;
+
+    // Tokens nur einmal holen. @BeforeAll geht hier nicht: dort ist
+    // RestAssured noch nicht auf die laufende Test-App konfiguriert.
+    @BeforeEach
+    void login() {
+        if (userToken == null) {
+            userToken = login("susi", "passme");
+            adminToken = login("max", "passme");
+        }
+    }
+
+    static String login(String username, String password) {
+        return given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"username": "%s", "password": "%s"}
+                        """.formatted(username, password))
+                .when().post("/security/login")
+                .then()
+                .statusCode(200)
+                .extract().asString();
+    }
+
+    private RequestSpecification asUser() {
+        return given().auth().oauth2(userToken);
+    }
+
+    private RequestSpecification asAdmin() {
+        return given().auth().oauth2(adminToken);
+    }
+
+    @Test
+    void loginWithWrongPassword_401() {
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"username": "susi", "password": "falsch"}
+                        """)
+                .when().post("/security/login")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    void info() {
+        asUser()
+                .when().get("/security/info")
+                .then()
+                .statusCode(200)
+                .body(containsString("user: susi"))
+                .body(containsString("hasJWT: true"));
+    }
+
+    @Test
+    void getAllWithoutLogin_401() {
+        given()
+                .when().get("/students")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    void getAllWithInvalidToken_401() {
+        given().auth().oauth2("kein.gueltiges.token")
+                .when().get("/students")
+                .then()
+                .statusCode(401);
+    }
 
     @Test
     void getAll() {
-        given()
+        asUser()
                 .when().get("/students")
                 .then()
                 .statusCode(200)
@@ -26,7 +95,7 @@ class StudentEndpointTest {
 
     @Test
     void get() {
-        given()
+        asUser()
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
@@ -34,64 +103,65 @@ class StudentEndpointTest {
     }
 
     @Test
-    void createAndDelete() {
-        JsonObject tt = Json.createObjectBuilder()
-                .add("userid", "if1001")
-                .add("firstname", "Tom")
-                .add("lastname", "Tester")
-                .build();
+    void createAsUser_403() {
+        asUser()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"userid": "if1002", "firstname": "Tom", "lastname": "Tester"}
+                        """)
+                .when().post("/students")
+                .then()
+                .statusCode(403);
+    }
 
-        given().contentType(MediaType.APPLICATION_JSON)
-                .body(tt.toString())
-                .when()
-                .post("/students")
+    @Test
+    void createAndDelete() {
+        asAdmin()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"userid": "if1001", "firstname": "Tom", "lastname": "Tester"}
+                        """)
+                .when().post("/students")
                 .then()
                 .statusCode(201)
                 .header("Location", containsString("/students/if1001"));
 
-        given()
+        asUser()
                 .when().get("/students/if1001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Tester"));
 
-        given().when()
-                .delete("students/if1001")
+        asAdmin()
+                .when().delete("/students/if1001")
                 .then()
                 .statusCode(204);
     }
 
     @Test
     void update() {
-        JsonObject mm = Json.createObjectBuilder()
-                .add("userid", "it0001")
-                .add("firstname", "Max2")
-                .add("lastname", "Muster2")
-                .build();
-        given()
+        asAdmin()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mm.toString())
+                .body("""
+                        {"userid": "it0001", "firstname": "Max2", "lastname": "Muster2"}
+                        """)
                 .when().put("/students")
                 .then()
                 .statusCode(204);
 
-        given()
+        asUser()
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Muster2"));
 
-        mm = Json.createObjectBuilder()
-                .add("userid", "it0001")
-                .add("firstname", "Max")
-                .add("lastname", "Muster")
-                .build();
-        given()
+        asAdmin()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mm.toString())
+                .body("""
+                        {"userid": "it0001", "firstname": "Max", "lastname": "Muster"}
+                        """)
                 .when().put("/students")
                 .then()
                 .statusCode(204);
     }
-
 }

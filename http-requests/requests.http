@@ -1,0 +1,28 @@
+### Login als susi (Rolle user) - Token wird in {{token}} gespeichert
+POST http://localhost:8080/security/login
+Content-Type: application/json
+
+{
+  "username": "susi",
+  "password": "passme"
+}
+
+> {% client.global.set("token", response.body); %}
+
+### Info zum aktuellen Token
+GET http://localhost:8080/security/info
+Authorization: Bearer {{token}}
+
+### Students lesen -> 200
+GET http://localhost:8080/students
+Authorization: Bearer {{token}}
+
+### Ohne Token -> 401
+GET http://localhost:8080/students
+
+### Als susi anlegen -> 403 (nur admin)
+POST http://localhost:8080/students
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "userid": "it1000", "firstname": "Gerald", "lastname": "Aistleitner" }
