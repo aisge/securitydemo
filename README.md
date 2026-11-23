@@ -21,8 +21,9 @@ git checkout jwt
 ## Voraussetzungen
 
 * Java 21
-* Docker oder Podman – im Dev- und Testmodus startet Quarkus *Dev Services*
-  automatisch eine PostgreSQL-Datenbank (und im Branch `keycloak` einen Keycloak).
+* Datenbank: H2 In-Memory – keine Installation nötig, Daten werden bei jedem Start
+  neu aus `import.sql` geladen.
+* Nur Branch `keycloak`: Docker oder Podman (Dev Services starten dort Keycloak).
 
 ## Starten
 
@@ -38,5 +39,5 @@ git checkout jwt
 java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-Im prod-Profil wird keine Datenbank automatisch gestartet – Verbindung siehe
-`%prod.quarkus.datasource.*` in `src/main/resources/application.properties`.
+Auch im prod-Profil wird eine H2 In-Memory-Datenbank verwendet
+(`%prod.quarkus.datasource.jdbc.url` in `src/main/resources/application.properties`).
