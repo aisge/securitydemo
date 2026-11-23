@@ -25,7 +25,7 @@ public class StudentEndpoint {
 
     @GET
     public List<Student> getAll() {
-        return studentRepository.findAll().list();
+        return studentRepository.listAll();
     }
 
     @GET
