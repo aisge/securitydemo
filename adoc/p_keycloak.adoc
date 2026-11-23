@@ -208,3 +208,5 @@ provideOAuthClient({ resourceServer: {
 ----
 
 Login: `oauthService.initCodeFlow()`, Logout: `oauthService.logOut()`
+
+Komplettes Beispiel (Angular 22): Branch `keycloak`, Ordner `frontend`

@@ -666,7 +666,8 @@ class StudentEndpointTest {
 provideHttpClient(withInterceptorsFromDi()),
 provideOAuthClient({ resourceServer: {
   allowedUrls: ['http://localhost:8080'], sendAccessToken: true } })</code></pre></div></div>
-<div class="paragraph"><p>Login: <code>oauthService.initCodeFlow()</code>, Logout: <code>oauthService.logOut()</code></p></div></div></section></section></div></div><script src="https://cdn.jsdelivr.net/npm/reveal.js@4.1.2/dist/reveal.js"></script><script>Array.prototype.slice.call(document.querySelectorAll('.slides section')).forEach(function(slide) {
+<div class="paragraph"><p>Login: <code>oauthService.initCodeFlow()</code>, Logout: <code>oauthService.logOut()</code></p></div>
+<div class="paragraph"><p>Komplettes Beispiel (Angular 22): Branch <code>keycloak</code>, Ordner <code>frontend</code></p></div></div></section></section></div></div><script src="https://cdn.jsdelivr.net/npm/reveal.js@4.1.2/dist/reveal.js"></script><script>Array.prototype.slice.call(document.querySelectorAll('.slides section')).forEach(function(slide) {
   if (slide.getAttribute('data-background-color')) return;
   // user needs to explicitly say he wants CSS color to override otherwise we might break custom css or theme (#226)
   if (!(slide.classList.contains('canvas') || slide.classList.contains('background'))) return;
