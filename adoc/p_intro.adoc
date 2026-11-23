@@ -1,0 +1,25 @@
+[.lightbg,background-opacity="0.2"]
+== Security mit Quarkus
+
+Bisher waren unsere REST-Services immer für alle erreichbar, die Zugriff auf den Rechner hatten.
+
+Absichern der Services ist über mehrere Wege möglich.
+
+Folgende Varianten werden hier behandelt:
+
+* Benutzerkonfiguration in Properties-Files
+* Benutzerkonfiguration in der DB
+* JWT
+* OAuth2 / KeyCloak
+
+
+[.lightbg,background-video="{backgroundimg}/configuration.mp4",background-video-loop="true",background-opacity="0.3"]
+=== Ausgangsprojekt aufbauen
+
+* Git-Projekt klonen und alle Branches downloaden:
+`https://github.com/aisge/securitydemo.git`
+* Datenbank starten
+* Security Policy definieren mittels Annotationen:
+** GET-Methoden: `@RolesAllowed("user")`
+** UPDATE-Methoden: `@RolesAllowed("admin")`
+
