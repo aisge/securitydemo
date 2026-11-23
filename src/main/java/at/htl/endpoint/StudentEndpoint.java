@@ -2,15 +2,15 @@ package at.htl.endpoint;
 
 import at.htl.model.Student;
 import at.htl.repository.StudentRepository;
-import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
-import javax.annotation.security.RolesAllowed;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+
 import java.net.URI;
 import java.util.List;
 
@@ -19,21 +19,20 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Transactional
-@Authenticated
 public class StudentEndpoint {
 
     @Inject
     StudentRepository studentRepository;
 
     @GET
-    @RolesAllowed({"user", "admin"})
+    @RolesAllowed("user")
     public List<Student> getAll() {
-        return studentRepository.findAll().list();
+        return studentRepository.listAll();
     }
 
     @GET
     @Path("/{userid}")
-    @RolesAllowed({"user", "admin"})
+    @RolesAllowed("user")
     public Student getStudent(@PathParam("userid") String userid) {
         return studentRepository.findById(userid);
     }
@@ -57,8 +56,8 @@ public class StudentEndpoint {
     }
 
     @DELETE
-    @Path("/{userid}")
     @RolesAllowed("admin")
+    @Path("/{userid}")
     public Response delete(@PathParam("userid") String userid) {
         studentRepository.deleteById(userid);
         return Response.status(204).build();

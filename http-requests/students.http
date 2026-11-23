@@ -1,0 +1,25 @@
+# Keycloak-URL: im Dev-Modus (Dev Services) und mit eigenem Container Port 8180.
+# Client-Secret: "secret" (siehe quarkus-realm.json / application.properties)
+
+### Access-Token für susi (Rolle user) holen -> {{token}}
+POST http://localhost:8180/realms/quarkus-realm/protocol/openid-connect/token
+Authorization: Basic quarkus-client secret
+Content-Type: application/x-www-form-urlencoded
+
+username=susi&password=passme&grant_type=password
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### Students lesen -> 200
+GET http://localhost:8080/students
+Authorization: Bearer {{token}}
+
+### Ohne Token -> 401
+GET http://localhost:8080/students
+
+### Als susi anlegen -> 403 (nur admin)
+POST http://localhost:8080/students
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "userid": "it1000", "firstname": "Gerald", "lastname": "Aistleitner" }

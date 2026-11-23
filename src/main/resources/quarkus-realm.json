@@ -1,0 +1,92 @@
+{
+  "realm": "quarkus-realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      {
+        "name": "admin"
+      },
+      {
+        "name": "user"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "max",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Max",
+      "lastName": "Demo",
+      "email": "max@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "passme",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user"
+      ]
+    },
+    {
+      "username": "susi",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Susi",
+      "lastName": "Demo",
+      "email": "susi@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "passme",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "quarkus-client",
+      "name": "Quarkus Backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ]
+    },
+    {
+      "clientId": "angular-client",
+      "name": "Angular Frontend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      }
+    }
+  ]
+}

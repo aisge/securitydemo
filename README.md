@@ -1,30 +1,68 @@
-# securitydemo project
+# securitydemo
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Demo-Projekt zur Übung *Security* (Quarkus 3.40, Java 21).
+Ausgangspunkt ist ein einfaches REST-Service für Studenten (`/students`).
+Jede Security-Variante liegt in einem eigenen Branch:
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+| Branch               | Inhalt                                                          |
+|----------------------|-----------------------------------------------------------------|
+| `master`             | Ausgangsprojekt ohne Security (REST + Hibernate ORM Panache)    |
+| `elytron.properties` | Basic Auth, User/Rollen in Properties-Files (MD5-Hashes)        |
+| `elytron.jdbc`       | Basic Auth, User/Rollen in der Datenbank (bcrypt)               |
+| `jwt`                | selbst ausgestellte JSON Web Tokens (SmallRye JWT)              |
+| `keycloak`           | OpenID Connect mit Keycloak (Dev Services oder eigener Server)  |
 
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
+```shell
+git clone https://github.com/aisge/securitydemo.git
+git branch --all
+git checkout jwt
 ```
-./mvnw quarkus:dev
+
+## Voraussetzungen
+
+* Java 21
+* Docker oder Podman – im Dev- und Testmodus startet Quarkus *Dev Services*
+  automatisch eine PostgreSQL-Datenbank (und im Branch `keycloak` einen Keycloak).
+
+## Starten
+
+```shell
+./mvnw quarkus:dev     # Dev-Modus mit Live-Reload, Dev UI: http://localhost:8080/q/dev-ui
+./mvnw test            # Tests
 ```
 
-## Packaging and running the application
+## Packaging
 
-The application can be packaged using `./mvnw package`.
-It produces the `securitydemo-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+```shell
+./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
+```
 
-The application is now runnable using `java -jar target/securitydemo-1.0.0-SNAPSHOT-runner.jar`.
+Im prod-Profil wird keine Datenbank automatisch gestartet – Verbindung siehe
+`%prod.quarkus.datasource.*` in `src/main/resources/application.properties`.
 
-## Creating a native executable
+## Branch `keycloak`
 
-You can create a native executable using: `./mvnw package -Pnative`.
+Realm-Definition: `src/main/resources/quarkus-realm.json`
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
+* Realm `quarkus-realm`, Realm-Rollen `admin`, `user`
+* User `max` / `passme` (admin, user) und `susi` / `passme` (user)
+* Client `quarkus-client` (confidential, Secret `secret`, Direct access grants für Tests)
+* Client `angular-client` (public, Authorization Code Flow mit PKCE, `http://localhost:4200`)
 
-You can then execute your native executable with: `./target/securitydemo-1.0.0-SNAPSHOT-runner`
+**Variante A – Dev Services (empfohlen):** `./mvnw quarkus:dev` startet Keycloak automatisch
+auf Port 8180 und importiert den Realm. Admin-Konsole: Dev UI → Keycloak.
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
+**Variante B – eigener Keycloak-Container:**
+
+```shell
+docker run -d --name keycloak -p 8180:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=passme \
+  -v "$PWD/src/main/resources/quarkus-realm.json:/opt/keycloak/data/import/quarkus-realm-realm.json:ro,Z" \
+  quay.io/keycloak/keycloak:26.8 start-dev --import-realm
+```
+
+Admin-Konsole: http://localhost:8180 (admin / passme).
+Beim Import muss die Datei im Container `<realm>-realm.json` heißen, daher der Mount-Name.
+Damit Quarkus diesen Keycloak statt Dev Services verwendet:
+`quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus-realm` setzen.

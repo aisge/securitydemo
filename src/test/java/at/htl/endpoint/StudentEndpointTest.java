@@ -1,18 +1,10 @@
 package at.htl.endpoint;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.BeforeEach;
+import io.quarkus.test.keycloak.client.KeycloakTestClient;
+import io.restassured.specification.RequestSpecification;
+import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.ws.rs.core.MediaType;
-import java.io.StringReader;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -21,57 +13,37 @@ import static org.hamcrest.CoreMatchers.is;
 @QuarkusTest
 class StudentEndpointTest {
 
-    @ConfigProperty(name = "keycloak.url")
-    String keycloakURL;
+    // Holt Tokens vom Keycloak, den Dev Services für die Tests starten
+    // (Realm aus quarkus-realm.json, Client/Secret aus application.properties)
+    static final KeycloakTestClient keycloakClient = new KeycloakTestClient();
 
-    @ConfigProperty(name = "quarkus.oidc.credentials.secret")
-    String credential;
+    private RequestSpecification asUser() {
+        return given().auth().oauth2(keycloakClient.getAccessToken("susi", "passme", "quarkus-client"));
+    }
 
-    String userToken;
-    String adminToken;
+    private RequestSpecification asAdmin() {
+        return given().auth().oauth2(keycloakClient.getAccessToken("max", "passme", "quarkus-client"));
+    }
 
-    @BeforeEach
-    void setup() {
-        // Only get tokens once
-        // Workaround, because @BeforeAll needs static method where @ConfigProperty is not working...
-        if (userToken != null) {
-            return;
-        }
+    @Test
+    void getAllWithoutLogin_401() {
+        given()
+                .when().get("/students")
+                .then()
+                .statusCode(401);
+    }
 
-        RestAssured.baseURI = keycloakURL;
-        Response response = given().urlEncodingEnabled(true).auth().preemptive().basic("quarkus-client", credential)
-                .param("grant_type", "password")
-                .param("client_id", "quarkus-client")
-                .param("username", "susi")
-                .param("password", "passme")
-                .header("Accept", ContentType.JSON.getAcceptHeader())
-                .post("/auth/realms/quarkus-realm/protocol/openid-connect/token")
-                .then().statusCode(200).extract().response();
-
-        JsonReader jsonReader = Json.createReader(new StringReader(response.getBody().asString()));
-        JsonObject object = jsonReader.readObject();
-        userToken = object.getString("access_token");
-
-        response = given().urlEncodingEnabled(true).auth().preemptive().basic("quarkus-client", credential)
-                .param("grant_type", "password")
-                .param("client_id", "quarkus-client")
-                .param("username", "max")
-                .param("password", "passme")
-                .header("Accept", ContentType.JSON.getAcceptHeader())
-                .post("/auth/realms/quarkus-realm/protocol/openid-connect/token")
-                .then().statusCode(200).extract().response();
-
-        jsonReader = Json.createReader(new StringReader(response.getBody().asString()));
-        object = jsonReader.readObject();
-        adminToken = object.getString("access_token");
-
-        RestAssured.baseURI = "http://localhost:8081";
+    @Test
+    void getAllWithInvalidToken_401() {
+        given().auth().oauth2("kein.gueltiges.token")
+                .when().get("/students")
+                .then()
+                .statusCode(401);
     }
 
     @Test
     void getAll() {
-        given()
-                .auth().preemptive().oauth2(userToken)
+        asUser()
                 .when().get("/students")
                 .then()
                 .statusCode(200)
@@ -80,8 +52,7 @@ class StudentEndpointTest {
 
     @Test
     void get() {
-        given()
-                .auth().preemptive().oauth2(userToken)
+        asUser()
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
@@ -89,70 +60,65 @@ class StudentEndpointTest {
     }
 
     @Test
-    void createAndDelete() {
-        JsonObject tt = Json.createObjectBuilder()
-                .add("userid", "if1001")
-                .add("firstname", "Tom")
-                .add("lastname", "Tester")
-                .build();
+    void createAsUser_403() {
+        asUser()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"userid": "if1002", "firstname": "Tom", "lastname": "Tester"}
+                        """)
+                .when().post("/students")
+                .then()
+                .statusCode(403);
+    }
 
-        given().contentType(MediaType.APPLICATION_JSON)
-                .auth().preemptive().oauth2(adminToken)
-                .body(tt.toString())
-                .when()
-                .post("/students")
+    @Test
+    void createAndDelete() {
+        asAdmin()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"userid": "if1001", "firstname": "Tom", "lastname": "Tester"}
+                        """)
+                .when().post("/students")
                 .then()
                 .statusCode(201)
                 .header("Location", containsString("/students/if1001"));
 
-        given()
-                .auth().preemptive().oauth2(userToken)
+        asUser()
                 .when().get("/students/if1001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Tester"));
 
-        given().when()
-                .auth().preemptive().oauth2(adminToken)
-                .delete("students/if1001")
+        asAdmin()
+                .when().delete("/students/if1001")
                 .then()
                 .statusCode(204);
     }
 
     @Test
     void update() {
-        JsonObject mm = Json.createObjectBuilder()
-                .add("userid", "it0001")
-                .add("firstname", "Max2")
-                .add("lastname", "Muster2")
-                .build();
-        given()
-                .auth().preemptive().oauth2(adminToken)
+        asAdmin()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mm.toString())
+                .body("""
+                        {"userid": "it0001", "firstname": "Max2", "lastname": "Muster2"}
+                        """)
                 .when().put("/students")
                 .then()
                 .statusCode(204);
 
-        given()
-                .auth().preemptive().oauth2(userToken)
+        asUser()
                 .when().get("/students/it0001")
                 .then()
                 .statusCode(200)
                 .body(containsString("Muster2"));
 
-        mm = Json.createObjectBuilder()
-                .add("userid", "it0001")
-                .add("firstname", "Max")
-                .add("lastname", "Muster")
-                .build();
-        given()
-                .auth().preemptive().oauth2(adminToken)
+        asAdmin()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mm.toString())
+                .body("""
+                        {"userid": "it0001", "firstname": "Max", "lastname": "Muster"}
+                        """)
                 .when().put("/students")
                 .then()
                 .statusCode(204);
     }
-
 }
